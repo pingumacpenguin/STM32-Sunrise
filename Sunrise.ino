@@ -1,9 +1,10 @@
 /*.
 (c) Andrew Hull - 2015
 
-STM32-O-Scope - aka "The Pig Scope" or pigScope released under the GNU GENERAL PUBLIC LICENSE Version 2, June 1991
+STM32-Sunrise - released under the GNU GENERAL PUBLIC LICENSE Version 2, June 1991
+Sunrise and sunset timer. 
 
-https://github.com/pingumacpenguin/STM32-O-Scope
+https://github.com/pingumacpenguin/STM32-Sunrise
 
 Adafruit Libraries released under their specific licenses Copyright (c) 2013 Adafruit Industries.  All rights reserved.
 
@@ -182,7 +183,7 @@ void setup()
   sCmd.addCommand("sleep",       sleepMode);               // Experimental - puts system to sleep
 
 #if defined TOUCH_SCREEN_AVAILABLE
-//  sCmd.addCommand("touchcalibrate", touchCalibrate);       // Calibrate Touch Panel
+  //  sCmd.addCommand("touchcalibrate", touchCalibrate);       // Calibrate Touch Panel
 #endif
 
 
@@ -213,18 +214,13 @@ void setup()
   myWidth  = TFT.height();
   TFT.setTextColor(CURSOR_COLOUR, BEAM_OFF_COLOUR) ;
 #if defined TOUCH_SCREEN_AVAILABLE
-//  touchCalibrate();
+  //  touchCalibrate();
 #endif
 
   TFT.setRotation(LANDSCAPE);
   clearTFT();
-  //showCredits(); // Honourable mentions ;¬)
-  //showGraticule();
   delay(5000) ;
   clearTFT();
-//  notTriggered = true;
-//  showGraticule();
-//  showLabels();
 }
 
 void loop() {
@@ -388,15 +384,6 @@ void showTime ()
     }
     TFT.print(second(tt));
     TFT.print(" ");
-    /*
-    TFT.print(day(tt));
-    TFT.print("-");
-    TFT.print(month(tt));
-    TFT.print("-");
-    TFT.print(year(tt));
-    TFT.print(" "TZ" ");
-    // TFT.print(tt);
-    */
   }
   //TFT.setRotation(PORTRAIT);
 }
@@ -408,26 +395,8 @@ void showDate ()
   //TFT.setRotation(LANDSCAPE);
   if (rt.getTime() != tt)
   {
-    
+
     tt = rt.getTime();
-    /*
-    //TFT.setCursor(5, 10);
-    if (hour(tt) < 10) {
-      TFT.print("0");
-    }
-    TFT.print(hour(tt));
-    TFT.print(":");
-    if (minute(tt) < 10) {
-      TFT.print("0");
-    }
-    TFT.print(minute(tt));
-    TFT.print(":");
-    if (second(tt) < 10) {
-      TFT.print("0");
-    }
-    TFT.print(second(tt));
-    TFT.print(" ");
-    */
     TFT.print(day(tt));
     TFT.print("-");
     TFT.print(month(tt));
@@ -440,18 +409,18 @@ void showDate ()
   //TFT.setRotation(PORTRAIT);
 }
 
-
-void sleepMode() 
+// STM32F103XXXX sleep mode
+void sleepMode()
 {
   serial_debug.println("# Nighty night!");
   // Set PDDS and LPDS bits for standby mode, and set Clear WUF flag (required per datasheet):
-PWR_BASE->CR |= PWR_CR_CWUF;
-PWR_BASE->CR |= PWR_CR_PDDS;
+  PWR_BASE->CR |= PWR_CR_CWUF;
+  PWR_BASE->CR |= PWR_CR_PDDS;
 
-// set sleepdeep in the system control register
-SCB_BASE->SCR |= SCB_SCR_SLEEPDEEP;
+  // set sleepdeep in the system control register
+  SCB_BASE->SCR |= SCB_SCR_SLEEPDEEP;
 
-// Now go into stop mode, wake up on interrupt
-// disableClocks();
-asm("wfi");
+  // Now go into stop mode, wake up on interrupt
+  // disableClocks();
+  asm("wfi");
 }
