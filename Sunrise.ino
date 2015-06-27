@@ -229,12 +229,16 @@ void setup()
 
 void loop() {
   // put your main code here, to run repeatedly:
+  TFT.setTextSize(4);
+  TFT.setCursor(5, 10);
   showTime();
+  TFT.setCursor(5, 80);
+  showDate();
+  TFT.setCursor(10, 120);
   printSunrise();
   serialCurrentTime();
 
 }
-
 
 
 float calculateSunrise(int year, int month, int day, float lat, float lng, int localOffset, int daylightSavings) {
@@ -300,8 +304,7 @@ float calculateSunrise(int year, int month, int day, float lat, float lng, int l
 }
 
 void printSunrise() {
-    TFT.setTextSize(4);
-   TFT.setCursor(10, 120);
+
   float localT = calculateSunrise(thisYear, thisMonth, thisDay, thisLat, thisLong, thisLocalOffset, thisDaylightSavings);
   double hours;
   float minutes = modf(localT, &hours) * 60;
@@ -369,7 +372,7 @@ void showTime ()
   if (rt.getTime() != tt)
   {
     tt = rt.getTime();
-    TFT.setCursor(5, 10);
+    //TFT.setCursor(5, 10);
     if (hour(tt) < 10) {
       TFT.print("0");
     }
@@ -385,6 +388,46 @@ void showTime ()
     }
     TFT.print(second(tt));
     TFT.print(" ");
+    /*
+    TFT.print(day(tt));
+    TFT.print("-");
+    TFT.print(month(tt));
+    TFT.print("-");
+    TFT.print(year(tt));
+    TFT.print(" "TZ" ");
+    // TFT.print(tt);
+    */
+  }
+  //TFT.setRotation(PORTRAIT);
+}
+
+void showDate ()
+{
+  // Show RTC Time.
+  //TFT.setTextSize(4);
+  //TFT.setRotation(LANDSCAPE);
+  if (rt.getTime() != tt)
+  {
+    
+    tt = rt.getTime();
+    /*
+    //TFT.setCursor(5, 10);
+    if (hour(tt) < 10) {
+      TFT.print("0");
+    }
+    TFT.print(hour(tt));
+    TFT.print(":");
+    if (minute(tt) < 10) {
+      TFT.print("0");
+    }
+    TFT.print(minute(tt));
+    TFT.print(":");
+    if (second(tt) < 10) {
+      TFT.print("0");
+    }
+    TFT.print(second(tt));
+    TFT.print(" ");
+    */
     TFT.print(day(tt));
     TFT.print("-");
     TFT.print(month(tt));
@@ -396,6 +439,8 @@ void showTime ()
   }
   //TFT.setRotation(PORTRAIT);
 }
+
+
 void sleepMode() 
 {
   serial_debug.println("# Nighty night!");
