@@ -2,7 +2,7 @@
 (c) Andrew Hull - 2015
 
 STM32-Sunrise - released under the GNU GENERAL PUBLIC LICENSE Version 2, June 1991
-Sunrise and sunset timer. 
+Sunrise and sunset timer.
 
 https://github.com/pingumacpenguin/STM32-Sunrise
 
@@ -236,8 +236,18 @@ void loop() {
 
 }
 
+float calculateSunrise(int year, int month, int day, float lat, float lng, int localOffset, int daylightSavings ) {
+  bool rise = true;
+  return calculateSunriseSunset(year, month, day, lat, lng, localOffset, daylightSavings, rise) ;
+}
 
-float calculateSunrise(int year, int month, int day, float lat, float lng, int localOffset, int daylightSavings) {
+float calculateSunset(int year, int month, int day, float lat, float lng, int localOffset, int daylightSavings ) {
+  bool rise = false;
+  return calculateSunriseSunset(year, month, day, lat, lng, localOffset, daylightSavings, rise) ;
+}
+
+//
+float calculateSunriseSunset(int year, int month, int day, float lat, float lng, int localOffset, int daylightSavings, bool rise) {
   /*
   localOffset will be <0 for western hemisphere and >0 for eastern hemisphere
   daylightSavings should be 1 if it is in effect during the summer otherwise it should be 0
@@ -250,9 +260,13 @@ float calculateSunrise(int year, int month, int day, float lat, float lng, int l
 
   //2. convert the longitude to hour value and calculate an approximate time
   float lngHour = lng / 15.0;
-  float t = N + ((6 - lngHour) / 24);   //if rising time is desired:
-  //float t = N + ((18 - lngHour) / 24)   //if setting time is desired:
 
+  float t = 0;
+  if (rise) {
+    float t = N + ((6 - lngHour) / 24);   //if rising time is desired:
+  } else {
+    float t = N + ((18 - lngHour) / 24);   //if setting time is desired:
+  }
   //3. calculate the Sun's mean anomaly
   float M = (0.9856 * t) - 3.289;
 
@@ -284,8 +298,13 @@ float calculateSunrise(int year, int month, int day, float lat, float lng, int l
   */
 
   //7b. finish calculating H and convert into hours
-  float H = 360 - (180 / PI) * acos(cosH); //   if if rising time is desired:
-  //float H = acos(cosH) //   if setting time is desired:
+  float H = 0;
+  if (rise) {
+    H = 360 - (180 / PI) * acos(cosH); //   if if rising time is desired:
+  } else {
+    H = (180 / PI) * acos(cosH) ; // if setting time is desired:
+  }
+  //float H = (180/PI)*acos(cosH) // if setting time is desired:
   H = H / 15;
 
   //8. calculate local mean time of rising/setting
@@ -310,6 +329,19 @@ void printSunrise() {
   TFT.print(uint(minutes));
   // TFT.printf("%.0f:%.0f", hours, minutes);
 }
+
+void printSuset() {
+
+  float localT = calculateSunset(thisYear, thisMonth, thisDay, thisLat, thisLong, thisLocalOffset, thisDaylightSavings);
+  double hours;
+  float minutes = modf(localT, &hours) * 60;
+  TFT.print("Sun Down ");
+  TFT.print(uint(hours));
+  TFT.print(":");
+  TFT.print(uint(minutes));
+  // TFT.printf("%.0f:%.0f", hours, minutes);
+}
+
 
 void setCurrentTime() {
   char *arg;
