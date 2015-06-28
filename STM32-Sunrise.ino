@@ -230,24 +230,31 @@ void loop() {
   showTime();
   TFT.setCursor(5, 80);
   showDate();
+
+  tt = rt.getTime();
+  thisYear = year(tt);
+  thisMonth = month(tt);
+  thisDay = day(tt);
   TFT.setCursor(10, 120);
   printSunrise();
+  TFT.setCursor(10, 160);
+  printSunset();
   serialCurrentTime();
 
 }
 
 float calculateSunrise(int year, int month, int day, float lat, float lng, int localOffset, int daylightSavings ) {
-  bool rise = true;
+  boolean rise = 1;
   return calculateSunriseSunset(year, month, day, lat, lng, localOffset, daylightSavings, rise) ;
 }
 
 float calculateSunset(int year, int month, int day, float lat, float lng, int localOffset, int daylightSavings ) {
-  bool rise = false;
+  boolean rise = 0;
   return calculateSunriseSunset(year, month, day, lat, lng, localOffset, daylightSavings, rise) ;
 }
 
 //
-float calculateSunriseSunset(int year, int month, int day, float lat, float lng, int localOffset, int daylightSavings, bool rise) {
+float calculateSunriseSunset(int year, int month, int day, float lat, float lng, int localOffset, int daylightSavings, boolean rise) {
   /*
   localOffset will be <0 for western hemisphere and >0 for eastern hemisphere
   daylightSavings should be 1 if it is in effect during the summer otherwise it should be 0
@@ -262,10 +269,12 @@ float calculateSunriseSunset(int year, int month, int day, float lat, float lng,
   float lngHour = lng / 15.0;
 
   float t = 0;
-  if (rise) {
-    float t = N + ((6 - lngHour) / 24);   //if rising time is desired:
-  } else {
-    float t = N + ((18 - lngHour) / 24);   //if setting time is desired:
+  if (rise ) {
+    t = N + ((6 - lngHour) / 24);   //if rising time is desired:
+  }
+  else
+  {
+    t = N + ((18 - lngHour) / 24);   //if setting time is desired:
   }
   //3. calculate the Sun's mean anomaly
   float M = (0.9856 * t) - 3.289;
@@ -299,10 +308,16 @@ float calculateSunriseSunset(int year, int month, int day, float lat, float lng,
 
   //7b. finish calculating H and convert into hours
   float H = 0;
-  if (rise) {
+  if (rise ) {
+    serial_debug.print("#sunrise");
     H = 360 - (180 / PI) * acos(cosH); //   if if rising time is desired:
-  } else {
-    H = (180 / PI) * acos(cosH) ; // if setting time is desired:
+    serial_debug.println(H);
+  }
+  else
+  {
+    serial_debug.print("# sunset ");
+    H = (180 / PI) * acos(cosH); // if setting time is desired:
+    serial_debug.println(H);
   }
   //float H = (180/PI)*acos(cosH) // if setting time is desired:
   H = H / 15;
@@ -323,22 +338,27 @@ void printSunrise() {
   float localT = calculateSunrise(thisYear, thisMonth, thisDay, thisLat, thisLong, thisLocalOffset, thisDaylightSavings);
   double hours;
   float minutes = modf(localT, &hours) * 60;
-  TFT.print("Sun Up ");
+  TFT.print("Sunrise ");
   TFT.print(uint(hours));
   TFT.print(":");
   TFT.print(uint(minutes));
+  // TFT.print(localT);
   // TFT.printf("%.0f:%.0f", hours, minutes);
 }
 
-void printSuset() {
+void printSunset() {
 
   float localT = calculateSunset(thisYear, thisMonth, thisDay, thisLat, thisLong, thisLocalOffset, thisDaylightSavings);
   double hours;
-  float minutes = modf(localT, &hours) * 60;
-  TFT.print("Sun Down ");
-  TFT.print(uint(hours));
+  float minutes = modf(24+localT, &hours) * 60;
+  TFT.print("Sunset ");
+  TFT.print(uint(24+localT));
   TFT.print(":");
+  if (uint(minutes) <10) {
+    TFT.print("0");
+  }
   TFT.print(uint(minutes));
+  //TFT.print(localT);
   // TFT.printf("%.0f:%.0f", hours, minutes);
 }
 
