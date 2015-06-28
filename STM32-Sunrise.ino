@@ -224,21 +224,22 @@ void setup()
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  
+  // Show time, date, sunrise and sunset
+  tt = rt.getTime();
+  thisYear = year(tt);
+  thisMonth = month(tt);
+  thisDay = day(tt);
+  
   TFT.setTextSize(4);
   TFT.setCursor(10, 10);
   showTime();
   TFT.setCursor(10, 70);
   showDate();
-
-  tt = rt.getTime();
-  thisYear = year(tt);
-  thisMonth = month(tt);
-  thisDay = day(tt);
   TFT.setCursor(10, 120);
-  printSunrise();
+  showSunrise();
   TFT.setCursor(10, 160);
-  printSunset();
+  showSunset();
   serialCurrentTime();
 
 }
@@ -333,7 +334,7 @@ float calculateSunriseSunset(int year, int month, int day, float lat, float lng,
 
 }
 
-void printSunrise() {
+void showSunrise() {
 
   float localT = calculateSunrise(thisYear, thisMonth, thisDay, thisLat, thisLong, thisLocalOffset, thisDaylightSavings);
   double hours;
@@ -347,7 +348,7 @@ void printSunrise() {
   TFT.print(uint(minutes));
 }
 
-void printSunset() {
+void showSunset() {
 
   float localT = calculateSunset(thisYear, thisMonth, thisDay, thisLat, thisLong, thisLocalOffset, thisDaylightSavings);
   double hours;
