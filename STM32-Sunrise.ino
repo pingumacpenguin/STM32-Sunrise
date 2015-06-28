@@ -219,8 +219,8 @@ void setup()
 
   TFT.setRotation(LANDSCAPE);
   clearTFT();
-  delay(5000) ;
-  clearTFT();
+  //delay(5000) ;
+  //clearTFT();
 }
 
 void loop() {
@@ -341,9 +341,10 @@ void printSunrise() {
   TFT.print("Sunrise ");
   TFT.print(uint(hours));
   TFT.print(":");
+  if (uint(minutes) < 10) {
+    TFT.print("0");
+  }
   TFT.print(uint(minutes));
-  // TFT.print(localT);
-  // TFT.printf("%.0f:%.0f", hours, minutes);
 }
 
 void printSunset() {
@@ -358,8 +359,6 @@ void printSunset() {
     TFT.print("0");
   }
   TFT.print(uint(minutes));
-  //TFT.print(localT);
-  // TFT.printf("%.0f:%.0f", hours, minutes);
 }
 
 
@@ -415,38 +414,28 @@ void clearTFT()
 void showTime ()
 {
   // Show RTC Time.
-  TFT.setTextSize(4);
-  //TFT.setRotation(LANDSCAPE);
-  if (rt.getTime() != tt)
-  {
-    tt = rt.getTime();
-    //TFT.setCursor(5, 10);
-    if (hour(tt) < 10) {
-      TFT.print("0");
-    }
-    TFT.print(hour(tt));
-    TFT.print(":");
-    if (minute(tt) < 10) {
-      TFT.print("0");
-    }
-    TFT.print(minute(tt));
-    TFT.print(":");
-    if (second(tt) < 10) {
-      TFT.print("0");
-    }
-    TFT.print(second(tt));
-    TFT.print(" ");
+
+  tt = rt.getTime();
+  if (hour(tt) < 10) {
+    TFT.print("0");
   }
-  //TFT.setRotation(PORTRAIT);
+  TFT.print(hour(tt));
+  TFT.print(":");
+  if (minute(tt) < 10) {
+    TFT.print("0");
+  }
+  TFT.print(minute(tt));
+  TFT.print(":");
+  if (second(tt) < 10) {
+    TFT.print("0");
+  }
+  TFT.print(second(tt));
+  TFT.print(" ");
 }
 
 void showDate ()
 {
   // Show RTC Time.
-  //TFT.setTextSize(4);
-  //TFT.setRotation(LANDSCAPE);
-  //if (rt.getTime() != tt)
-  //{
 
   tt = rt.getTime();
   TFT.print(day(tt));
@@ -454,11 +443,7 @@ void showDate ()
   TFT.print(month(tt));
   TFT.print("-");
   TFT.print(year(tt));
-  //TFT.print(" "TZ" ");
-  // TFT.print(tt);
 
-  //}
-  //TFT.setRotation(PORTRAIT);
 }
 
 // STM32F103XXXX sleep mode
