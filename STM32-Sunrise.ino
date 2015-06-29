@@ -1,12 +1,20 @@
 /*.
 (c) Andrew Hull - 2015
 
-STM32-Sunrise - released under the GNU GENERAL PUBLIC LICENSE Version 2, June 1991
+STM32-Sunrise - Released under the GNU GENERAL PUBLIC LICENSE Version 3
 Sunrise and sunset timer.
 
 https://github.com/pingumacpenguin/STM32-Sunrise
 
 Adafruit Libraries released under their specific licenses Copyright (c) 2013 Adafruit Industries.  All rights reserved.
+
+Honourable mention to https://stackoverflow.com/users/1678716/scottmrogowski Scott m Rogowski for the detailed sunrise calculation code posted here. 
+https://stackoverflow.com/questions/7064531/sunrise-sunset-times-in-c/9425781#9425781?newreg=23a1112cbf764135b2cc16a678d032de
+
+I have plagerised this unashamedly, since it is neat, tidy and *almost* worked first time. A few enhancements allow both sunset and sunrise to be caluclated with the same function,
+so I added a couple of wrapper functions to keep the code size down. 
+
+All other libraries are detailed with appopriate links in the code comments. 
 
 */
 
