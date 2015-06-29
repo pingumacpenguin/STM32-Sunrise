@@ -8,13 +8,13 @@ https://github.com/pingumacpenguin/STM32-Sunrise
 
 Adafruit Libraries released under their specific licenses Copyright (c) 2013 Adafruit Industries.  All rights reserved.
 
-Honourable mention to https://stackoverflow.com/users/1678716/scottmrogowski Scott m Rogowski for the detailed sunrise calculation code posted here. 
+Honourable mention to https://stackoverflow.com/users/1678716/scottmrogowski Scott m Rogowski for the detailed sunrise calculation code posted here.
 https://stackoverflow.com/questions/7064531/sunrise-sunset-times-in-c/9425781#9425781?newreg=23a1112cbf764135b2cc16a678d032de
 
 I have plagerised this unashamedly, since it is neat, tidy and *almost* worked first time. A few enhancements allow both sunset and sunrise to be caluclated with the same function,
-so I added a couple of wrapper functions to keep the code size down. 
+so I added a couple of wrapper functions to keep the code size down.
 
-All other libraries are detailed with appopriate links in the code comments. 
+All other libraries are detailed with appopriate links in the code comments.
 
 */
 
@@ -162,15 +162,26 @@ USBSerial serial_debug;
 int thisYear = 2015;
 int thisMonth = 6;
 int thisDay = 27;
+int lastDay = 0;
+int thisHour = 0;
+int thisMinute = 0;
+int thisSecond = 0;
 
 float thisLat = HERE_LATITUDE;
 float thisLong = HERE_LONGITUDE;
 int thisLocalOffset = 0;
 int thisDaylightSavings = 1;
 
+// Digital clock variables
+byte omm = 0;
+//byte ss=0;
+byte xcolon = 0;
 
 void setup()
 {
+  // Set a sensible time, this board has no battery
+  rt.setTime(1435580711);
+
 
   // BOARD_LED blinks on events assuming you have an LED on your board. If not simply dont't define it at the start of the sketch.
 #if defined BOARD_LED
@@ -232,24 +243,46 @@ void setup()
 }
 
 void loop() {
-  
-  // Show time, date, sunrise and sunset
+
+  // Setting the clock from the serial port is a matter of doing this in Linux...
+  // NOW=$(date --date "+1hour" +"%s"); echo -e "\n\ntimestamp $NOW\n\n" >/dev/ttyACMx
+  // where /dev/ttyACMx is the tty of the STM board. In my case /dev/ttyACM3
+  // You can't do this if something else, for example tha arduino Serial Monitor, is attached to the port.
+
+  sCmd.readSerial();     // Process serial commands
+  // Show time, date, sunrise and sunset, rinse, repeat }:¬)
   tt = rt.getTime();
   thisYear = year(tt);
   thisMonth = month(tt);
   thisDay = day(tt);
-  
-  TFT.setTextSize(4);
+  thisHour = hour(tt);
+  thisMinute = minute(tt);
+  thisSecond = second(tt);
+
+  TFT.setTextSize(1);
   TFT.setCursor(10, 10);
   showTime();
-  TFT.setCursor(10, 70);
-  showDate();
+  TFT.setTextSize(3);
+  if (lastDay != thisDay) {
+    TFT.setCursor(10, 80);
+    TFT.setTextColor(ILI9341_GREEN);
+    showDate();
+  }
+  lastDay = thisDay;
+
+
+  TFT.setTextColor(thisMinute * (thisSecond+1) * 65535);
+
   TFT.setCursor(10, 120);
   showSunrise();
+
+
+  TFT.setTextColor(thisHour * (thisSecond+1));
   TFT.setCursor(10, 160);
   showSunset();
-  serialCurrentTime();
-
+  //TFT.drawCentreString("12.34",60,91,7);
+  // serialCurrentTime();
+  TFT.setTextColor(ILI9341_GREEN);
 }
 
 float calculateSunrise(int year, int month, int day, float lat, float lng, int localOffset, int daylightSavings ) {
@@ -318,15 +351,15 @@ float calculateSunriseSunset(int year, int month, int day, float lat, float lng,
   //7b. finish calculating H and convert into hours
   float H = 0;
   if (rise ) {
-    serial_debug.print("#sunrise");
+    //serial_debug.print("#sunrise");
     H = 360 - (180 / PI) * acos(cosH); //   if if rising time is desired:
-    serial_debug.println(H);
+    //serial_debug.println(H);
   }
   else
   {
-    serial_debug.print("# sunset ");
+    //serial_debug.print("# sunset ");
     H = (180 / PI) * acos(cosH); // if setting time is desired:
-    serial_debug.println(H);
+    //serial_debug.println(H);
   }
   //float H = (180/PI)*acos(cosH) // if setting time is desired:
   H = H / 15;
@@ -381,7 +414,7 @@ void setCurrentTime() {
   setTime(thisArg.toInt());
   time_t tt = now();
   rt.setTime(tt);
-  serialCurrentTime();
+  //serialCurrentTime();
 }
 
 void serialCurrentTime() {
@@ -422,24 +455,53 @@ void clearTFT()
 
 void showTime ()
 {
-  // Show RTC Time.
 
   tt = rt.getTime();
-  if (hour(tt) < 10) {
-    TFT.print("0");
+  ////////
+  // Update digital time
+  byte xpos = 6;
+  byte ypos = 0;
+  byte mm = minute(tt);
+  byte hh = hour(tt);
+  byte ss = second(tt);
+
+  if (omm != mm) { // Only redraw every minute to minimise flicker
+    TFT.setTextColor(ILI9341_BLACK, ILI9341_BLACK); // Set font colour to back to wipe image
+    // Font 7 is to show a pseudo 7 segment display.
+    // Font 7 only contains characters [space] 0 1 2 3 4 5 6 7 8 9 : .
+    TFT.drawString("88:88", xpos, ypos, 7); // Overwrite the text to clear it
+    TFT.setTextColor(0xFBE0, ILI9341_BLACK); // Orange
+    omm = minute(tt);
+
+    if (hh < 10) xpos += TFT.drawChar('0', xpos, ypos, 7);
+    xpos += TFT.drawNumber(hh, xpos, ypos, 7);
+    xcolon = xpos;
+    xpos += TFT.drawChar(':', xpos, ypos, 7);
+    if (mm < 10) xpos += TFT.drawChar('0', xpos, ypos, 7);
+    TFT.drawNumber(mm, xpos, ypos, 7);
   }
-  TFT.print(hour(tt));
-  TFT.print(":");
-  if (minute(tt) < 10) {
-    TFT.print("0");
+
+  if (ss % 2) { // Flash the colon
+    TFT.setTextColor(0x39C4, ILI9341_BLACK);
+    //delay(500);
+    xpos += TFT.drawChar(':', xcolon, ypos, 7);
+    TFT.setTextColor(0xFBE0, ILI9341_BLACK);
+    //delay(500);
   }
-  TFT.print(minute(tt));
-  TFT.print(":");
-  if (second(tt) < 10) {
-    TFT.print("0");
+  else {
+    TFT.drawChar(':', xcolon, ypos, 7);
+    uint32 colour = ILI9341_GREEN;
+    //uint32 colour = 0x39C4;
+    // Erase the text with a rectangle
+    //TFT.fillRect (0, 48, 160, 20, ILI9341_BLACK);
+    TFT.setTextColor(colour);
+    //TFT.drawRightString("Colour", 75, 64, 4); // Right justified string drawing to x position 75
+    //String scolour = String(colour, HEX);
+    //scolour.toUpperCase();
+    //char buffer[20];
+    //scolour.toCharArray(buffer, 20);
+    //TFT.drawString(buffer, 82, 64, 4);
   }
-  TFT.print(second(tt));
-  TFT.print(" ");
 }
 
 void showDate ()
