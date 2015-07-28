@@ -121,6 +121,10 @@ variants/generic_stm32f103c/board/board.h:#define BOARD_SPI2_SCK_PIN        PB13
 #define TFT_LED        PA3     // Backlight 
 #define TEST_WAVE_PIN       PB0     // PWM 500 Hz 
 
+// Relay pins
+#define RELAY_1 PC4
+#define RELAY_2 PC5
+
 // Create the lcd object
 Adafruit_ILI9341_STM TFT = Adafruit_ILI9341_STM(TFT_CS, TFT_DC, TFT_RST); // Using hardware SPI
 
@@ -169,7 +173,7 @@ int thisSecond = 0;
 
 float thisLat = HERE_LATITUDE;
 float thisLong = HERE_LONGITUDE;
-int thisLocalOffset = 0;
+float thisLocalOffset = 0;
 int thisDaylightSavings = 1;
 
 // Digital clock variables
@@ -179,9 +183,32 @@ byte xcolon = 0;
 
 void setup()
 {
-  // Set a sensible time, this board has no battery
-  rt.setTime(1435580711);
+  // Check time, and set a sensible time, if this board has no battery, or the time is unset
 
+  tt = rt.getTime();
+  // Check to see if we are close to the epoch, and if so, bad things must have happened to the RTC backup power domain.
+  if ( tt < 1024 )
+  {
+    // Set to a recent value - 29th June 2015 12:25 (just after mid day)
+    rt.setTime(1435580711);
+    // BOARD_LED blinks on events assuming you have an LED on your board. If not simply dont't define it at the start of the sketch.
+    // TODO: make the board blink a morse code for the error.
+    pinMode(RELAY_1, OUTPUT);
+    pinMode(RELAY_2, OUTPUT);
+#if defined BOARD_LED
+    pinMode(BOARD_LED, OUTPUT);
+    digitalWrite(BOARD_LED, HIGH);
+
+    digitalWrite(RELAY_1, LOW);
+    digitalWrite(RELAY_2, HIGH);
+
+    delay(1000);
+    digitalWrite(BOARD_LED, HIGH);
+    digitalWrite(RELAY_1, HIGH);
+    digitalWrite(RELAY_2, LOW);
+    delay(1000);
+#endif
+  }
 
   // BOARD_LED blinks on events assuming you have an LED on your board. If not simply dont't define it at the start of the sketch.
 #if defined BOARD_LED
@@ -259,8 +286,15 @@ void loop() {
   thisMinute = minute(tt);
   thisSecond = second(tt);
 
+
+  // drawRoundRect(uint16_tx0,uint16_ty0,uint16_tw,uint16_th,uint16_tradius,uint16_tcolor);
+  TFT.drawRoundRect(8, 8, 160, 60, 5, 0xFBE0);
+  TFT.drawRoundRect(6, 6, 164, 64, 5, 0xFBE0);
+
   TFT.setTextSize(1);
-  TFT.setCursor(10, 10);
+  TFT.setCursor(20, 20);
+
+  //
   showTime();
   TFT.setTextSize(3);
   if (lastDay != thisDay) {
@@ -271,18 +305,19 @@ void loop() {
   lastDay = thisDay;
 
 
-  TFT.setTextColor(thisMinute * (thisSecond+1) * 65535);
+  TFT.setTextColor(thisMinute * (thisSecond + 1) * 65535);
 
   TFT.setCursor(10, 120);
   showSunrise();
 
 
-  TFT.setTextColor(thisHour * (thisSecond+1));
+  TFT.setTextColor(255 * thisHour * (thisSecond + 30) + 10);
   TFT.setCursor(10, 160);
   showSunset();
   //TFT.drawCentreString("12.34",60,91,7);
   // serialCurrentTime();
   TFT.setTextColor(ILI9341_GREEN);
+
 }
 
 float calculateSunrise(int year, int month, int day, float lat, float lng, int localOffset, int daylightSavings ) {
@@ -459,8 +494,8 @@ void showTime ()
   tt = rt.getTime();
   ////////
   // Update digital time
-  byte xpos = 6;
-  byte ypos = 0;
+  byte xpos = 14;
+  byte ypos = 14;
   byte mm = minute(tt);
   byte hh = hour(tt);
   byte ss = second(tt);
@@ -487,6 +522,8 @@ void showTime ()
     xpos += TFT.drawChar(':', xcolon, ypos, 7);
     TFT.setTextColor(0xFBE0, ILI9341_BLACK);
     //delay(500);
+    relayOneOff();
+    relayTwoOn();
   }
   else {
     TFT.drawChar(':', xcolon, ypos, 7);
@@ -501,6 +538,8 @@ void showTime ()
     //char buffer[20];
     //scolour.toCharArray(buffer, 20);
     //TFT.drawString(buffer, 82, 64, 4);
+    relayOneOn();
+    relayTwoOff();
   }
 }
 
@@ -531,4 +570,28 @@ void sleepMode()
   // Now go into stop mode, wake up on interrupt
   // disableClocks();
   asm("wfi");
+}
+
+void relayOneOn()
+{
+    pinMode(RELAY_1, OUTPUT);
+    digitalWrite(RELAY_1, LOW);
+}
+
+void relayOneOff()
+{
+    pinMode(RELAY_1, OUTPUT);
+    digitalWrite(RELAY_1, HIGH);
+}
+
+void relayTwoOn()
+{
+    pinMode(RELAY_2, OUTPUT);
+    digitalWrite(RELAY_2, LOW);
+}
+
+void relayTwoOff()
+{
+    pinMode(RELAY_2, OUTPUT);
+    digitalWrite(RELAY_2, HIGH);
 }
